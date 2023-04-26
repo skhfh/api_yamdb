@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -23,6 +22,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'api.apps.ApiConfig',
     'reviews.apps.ReviewsConfig',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
