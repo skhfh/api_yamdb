@@ -1,7 +1,8 @@
 import datetime as dt
 
 from rest_framework import serializers
-from reviews.models import Category, Genre, Title
+from rest_framework.validators import UniqueTogetherValidator
+from reviews.models import Category, Comment, Genre, Review, Title
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -67,3 +68,43 @@ class TitleWriteSerializer(serializers.ModelSerializer):
                 'Год выпуска не может быть больше текущего!'
             )
         return value
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    title = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    author = serializers.SlugRelatedField(
+        slug_field="username", read_only=True
+    )
+
+    def validate(self, data):
+        """Проверяем, оставлял ли пользователь отзыв к произведению ранее."""
+        view = self.context['view']
+        request = self.context['request']
+        title_id = view.kwargs.get('title_id')
+        author = request.user
+        if (Review.objects.filter(author=author,
+                                  title__id=title_id).exists()
+                and request.method != 'PATCH'):
+            raise serializers.ValidationError(
+                'Вы уже оставляли отзыв к этому произведению.'
+            )
+        return data
+
+    class Meta:
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        model = Review
+        validators = (UniqueTogetherValidator(
+            queryset=Review.objects.all(),
+            fields=('title', 'author',)),)
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        fields = ('id', 'author', 'text', 'pub_date')
+        model = Comment
