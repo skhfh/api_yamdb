@@ -6,7 +6,10 @@ from users.models import User
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=256)
+    name = models.CharField(
+        max_length=256,
+        verbose_name='Название категории'
+    )
     slug = models.SlugField(max_length=50, unique=True)
 
     def __str__(self):
@@ -14,7 +17,10 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
-    name = models.CharField(max_length=256)
+    name = models.CharField(
+        max_length=256,
+        verbose_name='Название жанра'
+    )
     slug = models.SlugField(max_length=50, unique=True)
 
     def __str__(self):
@@ -22,17 +28,28 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
-    name = models.CharField(max_length=256)
-    year = models.PositiveIntegerField()
-    rating = models.IntegerField()
-    description = models.TextField()
+    name = models.CharField(
+        max_length=256,
+        verbose_name='Название произведения'
+    )
+    year = models.PositiveIntegerField(
+        verbose_name='Год создания'
+    )
+    description = models.TextField(
+        verbose_name='Описание'
+    )
     category = models.ForeignKey(
         'Category',
         null=True,
         on_delete=models.SET_NULL,
-        related_name='titles'
+        related_name='titles',
+        verbose_name='Категория'
     )
-    genre = models.ManyToManyField('Genre', related_name='titles')
+    genre = models.ManyToManyField(
+        'Genre',
+        related_name='titles',
+        verbose_name='Жанр'
+    )
 
     def __str__(self):
         return self.name
