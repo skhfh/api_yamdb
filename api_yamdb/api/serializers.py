@@ -1,8 +1,11 @@
 import datetime as dt
 
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
+from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 from reviews.models import Category, Comment, Genre, Review, Title
+
+User = get_user_model()
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -108,3 +111,33 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'author', 'text', 'pub_date')
         model = Comment
+
+
+class AuthSignupSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        required=True,
+        max_length=254,
+        validators=[UniqueValidator(queryset=User.objects.all(),
+                                    message='Пользователь с таким email уже'
+                                            'существует')]
+    )
+    username = serializers.CharField(max_length=150)
+
+    class Meta:
+        fields = ('email', 'username')
+        model = User
+
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError('Нельзя создать пользователя с'
+                                              'таким username!')
+        return value
+
+
+class AuthTokenSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(max_length=150)
+    confirmation_code = serializers.CharField()
+
+    class Meta:
+        fields = ('username', 'confirmation_code')
+        model = User
