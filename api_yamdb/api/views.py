@@ -5,7 +5,7 @@ from rest_framework import filters, viewsets
 from reviews.models import Category, Genre, Review, Title
 
 from .mixins import CreateListDestroyViewSet
-from .permissions import ReviewCommentPermissions
+# from .permissions import ReviewCommentPermissions
 from .serializers import (ReviewSerializer, CategorySerializer,
                           CommentSerializer, GenreSerializer,
                           TitleGetSerializer, TitleWriteSerializer)
@@ -41,7 +41,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = [ReviewCommentPermissions]
+    # permission_classes = [ReviewCommentPermissions]
     pagination_class = PageNumberPagination
 
     def perform_create(self, serializer):
@@ -56,7 +56,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = [ReviewCommentPermissions]
+    # permission_classes = [ReviewCommentPermissions]
     pagination_class = PageNumberPagination
 
     def perform_create(self, serializer):
