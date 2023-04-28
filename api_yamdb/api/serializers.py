@@ -2,7 +2,7 @@ import datetime as dt
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
+from rest_framework.validators import UniqueValidator
 from reviews.models import Category, Comment, Genre, Review, Title
 from .hidden import CurrentReviewDefault, CurrentTitleDefault
 
@@ -123,7 +123,12 @@ class AuthSignupSerializer(serializers.ModelSerializer):
                                     message='Пользователь с таким email уже'
                                             'существует')]
     )
-    username = serializers.CharField(max_length=150)
+    username = serializers.SlugField(
+        max_length=150,
+        validators=[UniqueValidator(queryset=User.objects.all(),
+                                    message='Пользователь с таким username уже'
+                                            'существует')]
+    )
 
     class Meta:
         fields = ('email', 'username')
@@ -137,9 +142,37 @@ class AuthSignupSerializer(serializers.ModelSerializer):
 
 
 class AuthTokenSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(max_length=150)
+    username = serializers.SlugField(max_length=150)
     confirmation_code = serializers.CharField()
 
     class Meta:
         fields = ('username', 'confirmation_code')
         model = User
+
+
+class MeSerializer(AuthSignupSerializer):
+    first_name = serializers.CharField(max_length=150, required=False)
+    last_name = serializers.CharField(max_length=150, required=False)
+
+    class Meta:
+        model = User
+        fields = ('username',
+                  'email',
+                  'first_name',
+                  'last_name',
+                  'bio',
+                  'role')
+        read_only_fields = ('role',)
+
+
+class UsersSerializer(MeSerializer):
+
+    class Meta:
+        model = User
+        fields = ('username',
+                  'email',
+                  'first_name',
+                  'last_name',
+                  'bio',
+                  'role')
+        read_only_fields = ()

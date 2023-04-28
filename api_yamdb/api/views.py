@@ -4,21 +4,20 @@ from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, status, viewsets
-from rest_framework.decorators import api_view
+from rest_framework import filters, permissions, status, viewsets
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Review, Title
 from .mixins import CreateListDestroyViewSet
-from .permissions import ReviewCommentPermissions
-from .serializers import (AuthSignupSerializer, AuthTokenSerializer,
-                          ReviewSerializer, CategorySerializer)
+from .permissions import AllActionsOnlyAdminPermissions, ReviewCommentPermissions
 from .serializers import (ReviewSerializer, CategorySerializer,
                           AuthSignupSerializer, AuthTokenSerializer,
                           CommentSerializer, GenreSerializer,
-                          TitleGetSerializer, TitleWriteSerializer)
+                          TitleGetSerializer, TitleWriteSerializer,
+                          MeSerializer, UsersSerializer)
 
 User = get_user_model()
 
@@ -81,7 +80,18 @@ class CommentViewSet(viewsets.ModelViewSet):
         return new_queryset
 
 
+class UsersViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UsersSerializer
+    permission_classes = (AllActionsOnlyAdminPermissions,)
+    pagination_class = PageNumberPagination
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+    lookup_field = 'username'
+
+
 @api_view(['POST'])
+@permission_classes([permissions.AllowAny])
 def auth_signup(request):
     serializer = AuthSignupSerializer(data=request.data)
     if serializer.is_valid():
@@ -102,6 +112,7 @@ def auth_signup(request):
 
 
 @api_view(['POST'])
+@permission_classes([permissions.AllowAny])
 def auth_token(request):
     serializer = AuthTokenSerializer(data=request.data)
     if serializer.is_valid():
@@ -115,3 +126,16 @@ def auth_token(request):
         return Response({'confirmation_code': 'Неверный код подтверждения'},
                         status=status.HTTP_400_BAD_REQUEST)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PATCH'])
+@permission_classes([permissions.IsAuthenticated])
+def get_your_profile(request):
+    if request.method == 'PATCH':
+        serializer = MeSerializer(request.user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer = MeSerializer(request.user)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
