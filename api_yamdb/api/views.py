@@ -12,7 +12,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Review, Title
 from .mixins import CreateListDestroyViewSet
-from .permissions import AllActionsOnlyAdminPermissions, ReviewCommentPermissions
+from .permissions import (AllActionsOnlyAdminPermissions,
+                          ReviewCommentPermissions)
 from .serializers import (ReviewSerializer, CategorySerializer,
                           AuthSignupSerializer, AuthTokenSerializer,
                           CommentSerializer, GenreSerializer,

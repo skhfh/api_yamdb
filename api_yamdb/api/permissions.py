@@ -27,4 +27,3 @@ class AllActionsOnlyAdminPermissions(permissions.BasePermission):
             return True
         else:
             return False
-
