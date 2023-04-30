@@ -10,7 +10,10 @@ class Category(models.Model):
         max_length=256,
         verbose_name='Название категории'
     )
-    slug = models.SlugField(max_length=50, unique=True)
+    slug = models.SlugField(
+        max_length=50,
+        unique=True,
+    )
 
     def __str__(self):
         return self.name
@@ -41,6 +44,7 @@ class Title(models.Model):
     category = models.ForeignKey(
         'Category',
         null=True,
+        blank=True,
         on_delete=models.SET_NULL,
         related_name='titles',
         verbose_name='Категория'
