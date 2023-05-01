@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from api.filters import TitleFilter
 from reviews.models import Category, Genre, Review, Title
 from .mixins import CreateListDestroyViewSet
 from .permissions import (AllActionsOnlyAdminPermission,
@@ -45,10 +46,9 @@ class GenreViewSet(CreateListDestroyViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.annotate(rating=Avg('reviews__score')).all()
-    serializer_class = TitleGetSerializer
     permission_classes = (ReadOnlyOrAdminPermission,)
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category', 'genre', 'name', 'year')
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):

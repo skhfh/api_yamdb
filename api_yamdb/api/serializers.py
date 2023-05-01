@@ -33,15 +33,7 @@ class TitleGetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = (
-            'id',
-            'name',
-            'year',
-            'rating',
-            'description',
-            'genre',
-            'category'
-        )
+        fields = '__all__'
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
@@ -57,15 +49,7 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = (
-            'id',
-            'name',
-            'year',
-            'rating',
-            'description',
-            'genre',
-            'category'
-        )
+        fields = '__all__'
 
     def validate_year(self, value):
         year = dt.date.today().year
@@ -98,7 +82,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         return data
 
     class Meta:
-        fields = ('id', 'text', 'author', 'score', 'pub_date', 'title')
+        fields = '__all__'
         model = Review
 
 
@@ -112,7 +96,7 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('id', 'author', 'text', 'pub_date', 'review')
+        fields = '__all__'
         model = Comment
 
 
