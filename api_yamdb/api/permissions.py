@@ -1,25 +1,22 @@
 from rest_framework import permissions
 
-from reviews.models import Comment, Review
 
-
-class ReviewCommentPermissions(permissions.BasePermission):
+class ReviewCommentPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         return (request.method in permissions.SAFE_METHODS
                 or request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_authenticated and request.user.is_admin:
+        if request.method in permissions.SAFE_METHODS:
             return True
-        if ((type(obj) == Comment or type(obj) == Review)
-            and request.user.is_authenticated
-                and request.user.is_moderator):
+        if (obj.author == request.user
+                or request.user.role in ('moderator', 'admin')
+                or request.user.is_superuser):
             return True
-        return (obj.author == request.user
-                or request.method in permissions.SAFE_METHODS)
+        return False
 
 
-class AllActionsOnlyAdminPermissions(permissions.BasePermission):
+class AllActionsOnlyAdminPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
@@ -27,3 +24,14 @@ class AllActionsOnlyAdminPermissions(permissions.BasePermission):
             return True
         else:
             return False
+
+
+class ReadOnlyOrAdminPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        if request.user.is_anonymous:
+            return False
+        if request.user.role == 'admin' or request.user.is_superuser:
+            return True
+        return False
