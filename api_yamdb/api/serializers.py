@@ -100,7 +100,7 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
 
 
-class AuthSignupSerializer(serializers.Serializer):
+class BaseCustomUserSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
     email = serializers.EmailField(required=True, max_length=254)
 
@@ -110,6 +110,9 @@ class AuthSignupSerializer(serializers.Serializer):
             raise serializers.ValidationError('Нельзя создать пользователя с'
                                               'таким username!')
         return username
+
+
+class AuthSignupSerializer(BaseCustomUserSerializer):
 
     def validate(self, data):
         if (not User.objects.filter(username=data['username']).exists()
@@ -124,7 +127,7 @@ class AuthTokenSerializer(serializers.Serializer):
     confirmation_code = serializers.CharField()
 
 
-class MeSerializer(serializers.ModelSerializer):
+class MeSerializer(BaseCustomUserSerializer, serializers.ModelSerializer):
     email = serializers.EmailField(
         required=False,
         max_length=254,
@@ -152,13 +155,6 @@ class MeSerializer(serializers.ModelSerializer):
                   'role')
         read_only_fields = ('role',)
 
-    def validate_username(self, username):
-        if (username.lower() == 'me'
-                or re.match(r'^[\w.@+-]', username) is None):
-            raise serializers.ValidationError('Нельзя создать пользователя с'
-                                              'таким username!')
-        return username
-
 
 class UsersSerializer(MeSerializer):
     email = serializers.EmailField(
@@ -176,12 +172,5 @@ class UsersSerializer(MeSerializer):
         required=True
     )
 
-    class Meta:
-        model = User
-        fields = ('username',
-                  'email',
-                  'first_name',
-                  'last_name',
-                  'bio',
-                  'role')
+    class Meta(MeSerializer.Meta):
         read_only_fields = ()

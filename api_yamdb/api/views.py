@@ -12,6 +12,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from api.filters import TitleFilter
+from api_yamdb.settings import ADMIN_EMAIL
 from reviews.models import Category, Genre, Review, Title
 from .mixins import CreateListDestroyViewSet
 from .permissions import (AllActionsOnlyAdminPermission,
@@ -29,7 +30,6 @@ User = get_user_model()
 class CategoryViewSet(CreateListDestroyViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (ReadOnlyOrAdminPermission,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -38,7 +38,6 @@ class CategoryViewSet(CreateListDestroyViewSet):
 class GenreViewSet(CreateListDestroyViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (ReadOnlyOrAdminPermission,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -101,11 +100,9 @@ class UsersViewSet(viewsets.ModelViewSet):
     def me(self, request):
         if request.method == 'PATCH':
             serializer = MeSerializer(request.user, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
         serializer = MeSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -116,8 +113,8 @@ def auth_signup(request):
     serializer = AuthSignupSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     try:
-        email = serializer.data.get('email')
-        username = serializer.data.get('username')
+        email = serializer.validated_data.get('email')
+        username = serializer.validated_data.get('username')
         user, _ = User.objects.get_or_create(
             username=username,
             email=email
@@ -129,7 +126,7 @@ def auth_signup(request):
     send_mail(
         f'{username}, your Confirmation code',
         confirmation_code,
-        'ymdb@ymdb.com',
+        ADMIN_EMAIL,
         [email],
         fail_silently=False,
     )
@@ -140,14 +137,13 @@ def auth_signup(request):
 @permission_classes([permissions.AllowAny])
 def auth_token(request):
     serializer = AuthTokenSerializer(data=request.data)
-    if serializer.is_valid():
-        username = serializer.data.get('username')
-        user = get_object_or_404(User, username=username)
-        confirmation_code = serializer.data.get('confirmation_code')
-        if default_token_generator.check_token(user, confirmation_code):
-            refresh = RefreshToken.for_user(user)
-            return Response({'token': str(refresh.access_token)},
-                            status=status.HTTP_200_OK)
-        return Response({'confirmation_code': 'Неверный код подтверждения'},
-                        status=status.HTTP_400_BAD_REQUEST)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.validated_data.get('username')
+    user = get_object_or_404(User, username=username)
+    confirmation_code = serializer.validated_data.get('confirmation_code')
+    if default_token_generator.check_token(user, confirmation_code):
+        refresh = RefreshToken.for_user(user)
+        return Response({'token': str(refresh.access_token)},
+                        status=status.HTTP_200_OK)
+    return Response({'confirmation_code': 'Неверный код подтверждения'},
+                    status=status.HTTP_400_BAD_REQUEST)
