@@ -19,3 +19,11 @@ class User(AbstractUser):
         blank=True,
         null=True,
     )
+
+    @property
+    def staff_permission(self):
+        return self.role in ('moderator', 'admin') or self.is_superuser
+
+    @property
+    def admin_permission(self):
+        return self.role == 'admin' or self.is_superuser
