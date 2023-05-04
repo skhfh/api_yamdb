@@ -1,8 +1,8 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from django.core.validators import MaxValueValidator, MinValueValidator
-
 from users.models import User
+from .validators import validate_year
 
 
 class Category(models.Model):
@@ -36,7 +36,8 @@ class Title(models.Model):
         verbose_name='Название произведения'
     )
     year = models.PositiveIntegerField(
-        verbose_name='Год создания'
+        verbose_name='Год создания',
+        validators=[validate_year]
     )
     description = models.TextField(
         verbose_name='Описание'

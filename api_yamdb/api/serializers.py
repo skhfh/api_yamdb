@@ -1,9 +1,9 @@
-import datetime as dt
 import re
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+
 from reviews.models import Category, Comment, Genre, Review, Title
 from .hidden import CurrentReviewDefault, CurrentTitleDefault
 
@@ -14,7 +14,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ('name', 'slug')
+        exclude = ('id',)
         lookup_field = 'slug'
 
 
@@ -22,7 +22,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = ('name', 'slug')
+        exclude = ('id',)
         lookup_field = 'slug'
 
 
@@ -50,14 +50,6 @@ class TitleWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = '__all__'
-
-    def validate_year(self, value):
-        year = dt.date.today().year
-        if value > year:
-            raise serializers.ValidationError(
-                'Год выпуска не может быть больше текущего!'
-            )
-        return value
 
 
 class ReviewSerializer(serializers.ModelSerializer):
