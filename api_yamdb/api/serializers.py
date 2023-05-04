@@ -1,9 +1,9 @@
-import datetime as dt
 import re
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+
 from reviews.models import Category, Comment, Genre, Review, Title
 from .hidden import CurrentReviewDefault, CurrentTitleDefault
 
@@ -14,7 +14,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ('name', 'slug')
+        exclude = ('id',)
         lookup_field = 'slug'
 
 
@@ -22,7 +22,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = ('name', 'slug')
+        exclude = ('id',)
         lookup_field = 'slug'
 
 
@@ -50,14 +50,6 @@ class TitleWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = '__all__'
-
-    def validate_year(self, value):
-        year = dt.date.today().year
-        if value > year:
-            raise serializers.ValidationError(
-                'Год выпуска не может быть больше текущего!'
-            )
-        return value
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -100,7 +92,7 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
 
 
-class AuthSignupSerializer(serializers.Serializer):
+class BaseCustomUserSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
     email = serializers.EmailField(required=True, max_length=254)
 
@@ -110,6 +102,9 @@ class AuthSignupSerializer(serializers.Serializer):
             raise serializers.ValidationError('Нельзя создать пользователя с'
                                               'таким username!')
         return username
+
+
+class AuthSignupSerializer(BaseCustomUserSerializer):
 
     def validate(self, data):
         if (not User.objects.filter(username=data['username']).exists()
@@ -124,7 +119,7 @@ class AuthTokenSerializer(serializers.Serializer):
     confirmation_code = serializers.CharField()
 
 
-class MeSerializer(serializers.ModelSerializer):
+class MeSerializer(BaseCustomUserSerializer, serializers.ModelSerializer):
     email = serializers.EmailField(
         required=False,
         max_length=254,
@@ -152,13 +147,6 @@ class MeSerializer(serializers.ModelSerializer):
                   'role')
         read_only_fields = ('role',)
 
-    def validate_username(self, username):
-        if (username.lower() == 'me'
-                or re.match(r'^[\w.@+-]', username) is None):
-            raise serializers.ValidationError('Нельзя создать пользователя с'
-                                              'таким username!')
-        return username
-
 
 class UsersSerializer(MeSerializer):
     email = serializers.EmailField(
@@ -176,12 +164,5 @@ class UsersSerializer(MeSerializer):
         required=True
     )
 
-    class Meta:
-        model = User
-        fields = ('username',
-                  'email',
-                  'first_name',
-                  'last_name',
-                  'bio',
-                  'role')
+    class Meta(MeSerializer.Meta):
         read_only_fields = ()
