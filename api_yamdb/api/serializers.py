@@ -119,9 +119,8 @@ class AuthTokenSerializer(serializers.Serializer):
     confirmation_code = serializers.CharField()
 
 
-class MeSerializer(BaseCustomUserSerializer, serializers.ModelSerializer):
+class UsersSerializer(BaseCustomUserSerializer, serializers.ModelSerializer):
     email = serializers.EmailField(
-        required=False,
         max_length=254,
         validators=[UniqueValidator(queryset=User.objects.all(),
                                     message='Пользователь с таким email уже'
@@ -132,7 +131,6 @@ class MeSerializer(BaseCustomUserSerializer, serializers.ModelSerializer):
         validators=[UniqueValidator(queryset=User.objects.all(),
                                     message='Пользователь с таким username уже'
                                             'существует')],
-        required=False
     )
     first_name = serializers.CharField(max_length=150, required=False)
     last_name = serializers.CharField(max_length=150, required=False)
@@ -145,24 +143,23 @@ class MeSerializer(BaseCustomUserSerializer, serializers.ModelSerializer):
                   'last_name',
                   'bio',
                   'role')
-        read_only_fields = ('role',)
 
 
-class UsersSerializer(MeSerializer):
+class MeSerializer(UsersSerializer):
     email = serializers.EmailField(
-        required=True,
+        required=False,
         max_length=254,
         validators=[UniqueValidator(queryset=User.objects.all(),
                                     message='Пользователь с таким email уже'
                                             'существует')]
     )
     username = serializers.SlugField(
+        required=False,
         max_length=150,
         validators=[UniqueValidator(queryset=User.objects.all(),
                                     message='Пользователь с таким username уже'
-                                            'существует')],
-        required=True
+                                            'существует')]
     )
 
-    class Meta(MeSerializer.Meta):
-        read_only_fields = ()
+    class Meta(UsersSerializer.Meta):
+        read_only_fields = ('role',)
