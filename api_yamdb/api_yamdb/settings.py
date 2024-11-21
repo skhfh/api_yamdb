@@ -121,4 +121,5 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
+# Email администратора ресурса
 ADMIN_EMAIL = 'ymdb@ymdb.com'

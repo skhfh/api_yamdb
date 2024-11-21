@@ -80,6 +80,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class UsersViewSet(viewsets.ModelViewSet):
+    """Работа с пользователями. Только для администратора"""
     queryset = User.objects.all()
     serializer_class = UsersSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
@@ -92,6 +93,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get', 'patch'],
             permission_classes=[permissions.IsAuthenticated])
     def me(self, request):
+        """Работа с собственным профилем (для всех пользователей)"""
         if request.method == 'PATCH':
             serializer = MeSerializer(request.user, data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -104,6 +106,7 @@ class UsersViewSet(viewsets.ModelViewSet):
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def auth_signup(request):
+    """Регистрация пользователей"""
     serializer = AuthSignupSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     try:
@@ -130,6 +133,7 @@ def auth_signup(request):
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def auth_token(request):
+    """Получение токена"""
     serializer = AuthTokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data.get('username')

@@ -93,6 +93,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class BaseCustomUserSerializer(serializers.Serializer):
+    """Базовый сериализатор для работы с пользователями"""
     username = serializers.CharField(max_length=150)
     email = serializers.EmailField(required=True, max_length=254)
 
@@ -105,7 +106,7 @@ class BaseCustomUserSerializer(serializers.Serializer):
 
 
 class AuthSignupSerializer(BaseCustomUserSerializer):
-
+    """Сериализатор для регистрации пользователей"""
     def validate(self, data):
         if (not User.objects.filter(username=data['username']).exists()
                 and User.objects.filter(email=data['email']).exists()):
@@ -115,11 +116,13 @@ class AuthSignupSerializer(BaseCustomUserSerializer):
 
 
 class AuthTokenSerializer(serializers.Serializer):
+    """Сериализатор для получения токена"""
     username = serializers.SlugField(max_length=150)
     confirmation_code = serializers.CharField()
 
 
 class UsersSerializer(BaseCustomUserSerializer, serializers.ModelSerializer):
+    """Сериализатор для работы с пользователями"""
     email = serializers.EmailField(
         max_length=254,
         validators=[UniqueValidator(queryset=User.objects.all(),
@@ -146,6 +149,10 @@ class UsersSerializer(BaseCustomUserSerializer, serializers.ModelSerializer):
 
 
 class MeSerializer(UsersSerializer):
+    """Сериализатор для эндпоинта users/me - данные о себе, на основе
+    UsersSerializer.
+    email и username необязательны при редактировании профиля
+    """
     email = serializers.EmailField(
         required=False,
         max_length=254,
